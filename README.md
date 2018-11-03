@@ -10,7 +10,7 @@ It's a spin off of functionality from https://github.com/eagleEggs/topanga, a la
 
 ### Requirements
 
-PySimpleGUI (TKinter alternative)
+PySimpleGUI (TKinter alternative)<br>
 Selenium
 
 ### Thanks
