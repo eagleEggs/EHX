@@ -8,6 +8,11 @@ It's a spin off of functionality from https://github.com/eagleEggs/topanga, a la
 
 ![anim1](https://github.com/eagleEggs/testStream/blob/master/testStream1.png?)<br>
 
+### Requirements
+
+PySimpleGUI (TKinter alternative)
+Selenium
+
 ### Thanks
 
 Great code from https://gist.github.com/dariodiaz/3104601 and https://gist.github.com/marciomazza/3086536 lead to enable the highlight functionality efficiently, quickly and easily.
