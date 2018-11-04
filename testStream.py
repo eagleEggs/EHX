@@ -37,8 +37,10 @@ class Engine(object):
 
 		if values['browsertype'] == "FF":
 			self.engine = webdriver.Firefox()
-		else:
+		elif values['browsertype'] == "IE":
 			self.engine = webdriver.Ie()
+		elif values['browsertype'] == "C":
+			self.engine = webdriver.Chrome()
 
 	def GetWebElement(self, elementType, tagValue):
 		self.elementType = elementType.lower()
