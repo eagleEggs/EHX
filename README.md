@@ -13,7 +13,7 @@ Note: For now, don't forget to add quotes around your element name.
 ### Requirements
 
 PySimpleGUI (TKinter alternative)<br>
-Selenium
+Selenium and Python Web Browser Drivers
 
 ### Thanks
 
