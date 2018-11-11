@@ -1,5 +1,5 @@
-# testStream
-Fluid Element Highlighting
+# EHX
+Element Hunter X
 
 ### What is it?
 
