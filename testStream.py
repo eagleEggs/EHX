@@ -1,29 +1,30 @@
 # ______________________________#
 ################################
-########  testStream  ##########
-########################v0.03###
+############  EHX  #############
+########################v1.0####
 
-# Fluid Test Building
-
+# Element Hunter X
+# Copyright github.com/eagleEggs
+# Contact: https://github.com/eagleEggs/EHX/issues
+# EHX is a submodule of Test Anatomy: https://github.com/eagleEggs/Test-Anatomy
 
 ################################
 ################################
 
 
 # Selenium:
-from selenium import webdriver
+from selenium import webdriver # selenium web driver
 
 # GUI:
-import PySimpleGUI as sg
-from tkinter import Tk
+import PySimpleGUI as sg # tkinter alt
 
 # System:
-from operator import *
-import logging
+import logging # logging system
+#import shelve # local DB storage system
 
 
-logging.basicConfig(filename='testStream.log', level=logging.INFO)
-logging.info("Launched testStream")
+logging.basicConfig(filename='Topanga_EHX.log', level=logging.INFO)
+logging.info("Launched EHX")
 
 
 #######################################
@@ -32,10 +33,9 @@ logging.info("Launched testStream")
 
 class Engine(object):
 	def __init__(self, browserName, siteAddress):
-
 		self.browserName = browserName
 		self.siteAddress = siteAddress
-		self.style = ""
+		self.elementStore = "" # used for tracking and removing elements for HL
 
 		if values['browsertype'] == "Internet Explorer":
 			self.engine = webdriver.Ie()
@@ -46,22 +46,37 @@ class Engine(object):
 
 
 	def Highlight(self, element):
-		parent = element._parent
-		#self.style = element.getAttribute("style")
-		print(self.style)
-		self.Stylize(parent, element, "background: pink; border: 3px solid red;")
+		try:
+			if self.elementStore is not "":
+				self.HighlightRemove(self.elementStore)
+			self.elementStore = element
+			parent = element._parent
+			self.Stylize(parent, element, "background: {}; border: 3px solid {};".format(values["colortype"], values["colortype"]))
+		except:
+			logging.error("Could not Highlight Element")
+			sg.PopupError("There was an issue Highlighting, Check Element")
 
 	def Stylize(self, parent, element, style):
-		self.engine.execute_script("arguments[0].setAttribute('style', arguments[1]);", element,
-		                           style)  # reference: https://gist.github.com/dariodiaz/3104601
+		try:
+			self.engine.execute_script("arguments[0].setAttribute('style', arguments[1]);", element, style)  # reference: https://gist.github.com/dariodiaz/3104601
+		except:
+			logging.error("Could not Stylize Element")
+			sg.PopupError("There was an issue Highlighting, Check Element")
 
 	def HighlightRemove(self, element):
-		parent = element._parent
-		self.StylizeRemove(parent, element, self.style)
+		try:
+			parent = element._parent
+			self.StylizeRemove(parent, element, " ;") # blanking out html style
+		except:
+			logging.error("Could not Remove Element Highlight")
+			sg.PopupError("There was an issue Highlighting, Check Element")
 
 	def StylizeRemove(self, parent, element, style):
-		self.engine.execute_script("arguments[0].setAttribute('style', arguments[1]);", element,
-		                           style)
+		try:
+			self.engine.execute_script("arguments[0].setAttribute('style', arguments[1])", element, style)
+		except:
+			logging.error("Could not Remove Element Style")
+			sg.PopupError("There was an issue Highlighting, Check Element")
 
 ################################
 ### Browser Controller Class ###
@@ -75,6 +90,11 @@ class BrowserController(Engine):
 		self.engine.get(self.siteAddress)
 
 
+################################
+###      Shelve Storage      ###
+################################
+
+
 
 ################################
 ###     Scratchpad Page      ###
@@ -82,19 +102,27 @@ class BrowserController(Engine):
 
 ddVals = ["Internet Explorer","Firefox", "Chrome"]
 ddElements = ["CSS Selector", "XPATH", "ID"]
+ddCols = ["Red", "Green", "Orchid", "Aqua", "Aquamarine ", "Orange", "Tomato", "Salmon", "Yellow", "Blue", "Plum", "PeachPuff"]
+
 
 col11 = [[
-         #sg.T("Configure, Paste, and Click")],
-         sg.Text("Element Hunter X", justification="right", size = (32, 1))],
-         [sg.InputText('Enter URL', key='appuri', do_not_clear=True, size = (35, 10))],
-         [sg.Text('Options:')], [sg.InputCombo(ddVals, key = "browsertype", size=(15,10)),
-		 sg.ReadButton("Launch Browser", border_width=0, tooltip='Start Testing Environment', key = "Launch")],
-		 #[sg.Text('Code Generation:')],
-         #[sg.Multiline("", size=(110, 15), enter_submits=True, key='scratchbox1', do_not_clear=True)],
-		 [sg.InputCombo(ddElements, key = "elementtype", size=(15,10)), sg.ReadButton('Highlight', border_width=0)],
-		 [sg.Text('Notes:')],
-         [sg.Multiline("", size=(35,10), enter_submits=True, key='scratchbox3', do_not_clear=True)],  # store mint here to paste easily into sb1
-		 [sg.Text('github.com/eagleEggs | License GPL v3', size = (32, 1))]]
+		 sg.Image(filename="bconfig.png", )],
+         [sg.InputText('https://www.github.com/eagleEggs/EHX', key='appuri', do_not_clear=True, size = (37, 10))],
+		 #sg.ReadButton('', key = "saveurl", border_width=0, size = (1, 1), image_filename="save.png", tooltip = "Save URL")],
+		 #[sg.InputCombo(urlhist, key = "urlshelf", size = (35, 10))], # shelf drop down - URL's
+         [sg.InputCombo(ddVals, key = "browsertype", size = (35, 10))],
+		 [sg.ReadButton("", border_width=0, tooltip='Start Testing Environment', key = "Launch", size = (33, 2), image_filename="HLlaunch.png")],
+		 [sg.Image(filename="econfig.png", )],
+		 [sg.Multiline(".text-gray-dark", size=(35,2), enter_submits=True, key='enterElement', do_not_clear=True)],
+		 #sg.ReadButton('', key = "saveelement", border_width=0, size = (1, 1), image_filename="save.png", tooltip = "Save Element")],
+		 #[sg.InputCombo(elementhist, key = "elementshelf", size = (35, 10))], # shelf drop down - Elements
+
+		 [sg.InputCombo(ddElements, key = "elementtype", size=(35,10))],
+		 [sg.InputCombo(ddCols, key="colortype", size=(35, 10))],
+		 [sg.ReadButton('', key = "highlight", border_width=0, size = (33, 5), image_filename="HLimg.png", tooltip = "Highlight Element")],
+		 [sg.T("")],
+		 [sg.Image(filename = "HLlogo.png", )],
+		 [sg.Image(filename="license.png", )]]
 
 
 #############################################
@@ -102,18 +130,10 @@ col11 = [[
 #############################################
 
 tab11 = [[sg.Column(col11, pad=(0, 0))]]
-
 layout = [[sg.Column(col11, size = (0, 0))]]
-
-window = sg.Window("Topanga EHX", no_titlebar=False, auto_size_text=True).Layout(layout).Finalize()
-
-#scratchBox1 = window.FindElement('scratchbox1')
-
-clips = Tk()
-
-clips.withdraw()
-
+window = sg.Window("EHX (v1.3)", no_titlebar=False, auto_size_text=True).Layout(layout).Finalize()
 lite = "" # shell to wait for app to create var for engine
+
 
 while True:
 
@@ -123,55 +143,43 @@ while True:
 		try:
 			app = BrowserController(values["browsertype"], values["appuri"])
 			app.openSite()
-
 			logging.info("Instantiating Application")
-
 		except:
 			logging.warning("Issue Instantiating Application")
 
 
-	if b == "Highlight":  # this grabs content from sb3 and puts it in script form for highlighting through API
-
-		if values['elementtype'] == "CSS Selector":
-			try:
-				board = clips.clipboard_get()
-				scriptvar = str.strip(board)
+	if b == "highlight":  # this grabs content from sb3 and puts it in script form for highlighting through API
+		try:
+			if values['elementtype'] == "CSS Selector":
+				scriptvar = str.strip(values['enterElement'])
 				exec("lite = app.engine.find_element_by_css_selector(\"{}\")\napp.Highlight(lite)".format(scriptvar))
 				logging.info("Scratchbox: Executed Command Successfully")
-			except:
 				logging.info("Scratchbox: Failed Executing Command")
+		except:
+			logging.info("Scratchbox: Failed Executing Command")
+			sg.PopupError("There was an issue Highlighting, Check Element")
 
 
 		if values['elementtype'] == "XPATH":
 			try:
-				board = clips.clipboard_get()
-				scriptvar = str.strip(board)
+				scriptvar = str.strip(values['enterElement'])
 				exec("lite = app.engine.find_element_by_xpath(\"{}\")\napp.Highlight(lite)".format(scriptvar))
 				logging.info("Scratchbox: Executed Command Successfully")
 			except:
 				logging.info("Scratchbox: Failed Executing Command")
+				sg.PopupError("There was an issue Highlighting, Check Element")
 
 		if values['elementtype'] == "ID":
 			try:
-				board = clips.clipboard_get()
-				scriptvar = str.strip(board)
+				scriptvar = str.strip(values['enterElement'])
 				exec("lite = app.engine.find_element_by_id(\"{}\")\napp.Highlight(lite)".format(scriptvar))
 				logging.info("Scratchbox: Executed Command Successfully")
 			except:
 				logging.info("Scratchbox: Failed Executing Command")
-
-	#if b == "Highlight Element":
-	#	try:
-	#		cmdresult = exec(values['scratchbox1'])
-	#		logging.info("Scratchbox: Executed Command Successfully")
-	#	except:
-	#		logging.info("Scratchbox: Failed Executing Command")
-
-	#if b == "Remove Highlight":
-	#	if lite:
-	#		app.HighlightRemove(lite)
+				sg.PopupError("There was an issue Highlighting, Check Element")
 
 
 
 	if b is None:
+		#shelf.close()
 		break
