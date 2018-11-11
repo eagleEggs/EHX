@@ -8,8 +8,6 @@ It's a spin off of functionality from https://github.com/eagleEggs/topanga, a la
 
 ![anim1](https://github.com/eagleEggs/testStream/blob/master/EHXimg.png?)<br>
 
-Note: For now, don't forget to add quotes around your element name.
-
 ### Requirements
 
 PySimpleGUI (TKinter alternative)<br>
