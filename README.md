@@ -4,7 +4,7 @@ Element Hunter X
 ### What is it?
 
 A GUI that lets you test and visualize elements in realtime while keeping a single browser instance open.
-It's a spin off of functionality from https://github.com/eagleEggs/topanga, a larger testing GUI.
+It's a spin off of functionality from https://github.com/eagleEggs/Test-Anatomy, a larger testing GUI.
 
 ![anim1](https://github.com/eagleEggs/testStream/blob/master/EHXimg.png?)<br>
 
