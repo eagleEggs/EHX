@@ -20,7 +20,6 @@ import PySimpleGUI as sg # tkinter alt
 
 # System:
 import logging # logging system
-#import shelve # local DB storage system
 
 
 logging.basicConfig(filename='Topanga_EHX.log', level=logging.INFO)
@@ -48,20 +47,23 @@ class Engine(object):
 	def Highlight(self, element):
 		try:
 			if self.elementStore is not "":
+				logging.error("Highlight: Removing Previous Element from Store")
 				self.HighlightRemove(self.elementStore)
+		except:
+			logging.error("Highlight: Issue with Element Store")
+		try:
 			self.elementStore = element
 			parent = element._parent
-			self.Stylize(parent, element, "background: {}; border: 3px solid {};".format(values["colortype"], values["colortype"]))
+			self.Stylize(parent, element,"background: {}; border: 3px solid {};".format(values["colortype"], values["colortype"]))
 		except:
 			logging.error("Could not Highlight Element")
-			sg.PopupError("There was an issue Highlighting, Check Element")
+			sg.PopupError("Highlight: There was an issue Highlighting, Check Element")
 
 	def Stylize(self, parent, element, style):
 		try:
 			self.engine.execute_script("arguments[0].setAttribute('style', arguments[1]);", element, style)  # reference: https://gist.github.com/dariodiaz/3104601
 		except:
 			logging.error("Could not Stylize Element")
-			sg.PopupError("There was an issue Highlighting, Check Element")
 
 	def HighlightRemove(self, element):
 		try:
@@ -69,14 +71,9 @@ class Engine(object):
 			self.StylizeRemove(parent, element, " ;") # blanking out html style
 		except:
 			logging.error("Could not Remove Element Highlight")
-			sg.PopupError("There was an issue Highlighting, Check Element")
 
 	def StylizeRemove(self, parent, element, style):
-		try:
-			self.engine.execute_script("arguments[0].setAttribute('style', arguments[1])", element, style)
-		except:
-			logging.error("Could not Remove Element Style")
-			sg.PopupError("There was an issue Highlighting, Check Element")
+		self.engine.execute_script("arguments[0].setAttribute('style', arguments[1])", element, style)
 
 ################################
 ### Browser Controller Class ###
@@ -149,37 +146,39 @@ while True:
 
 
 	if b == "highlight":  # this grabs content from sb3 and puts it in script form for highlighting through API
-		try:
-			if values['elementtype'] == "CSS Selector":
+		logging.info("Highlighting Button Pressed")
+
+		if values['elementtype'] == "CSS Selector":
+			logging.info("Highlighting Button Pressed, CSS")
+			try:
 				scriptvar = str.strip(values['enterElement'])
 				exec("lite = app.engine.find_element_by_css_selector(\"{}\")\napp.Highlight(lite)".format(scriptvar))
-				logging.info("Scratchbox: Executed Command Successfully")
-				logging.info("Scratchbox: Failed Executing Command")
-		except:
-			logging.info("Scratchbox: Failed Executing Command")
-			sg.PopupError("There was an issue Highlighting, Check Element")
-
+				logging.info("Highlighting Button Pressed, CSS, Successful")
+			except:
+				logging.error("Highlight Button Pressed But Failed Executing Command, CSS")
+				sg.PopupError("There was an issue Highlighting, Check Element")
 
 		if values['elementtype'] == "XPATH":
+			logging.info("Highlighting Button Pressed, XPATH")
 			try:
 				scriptvar = str.strip(values['enterElement'])
 				exec("lite = app.engine.find_element_by_xpath(\"{}\")\napp.Highlight(lite)".format(scriptvar))
-				logging.info("Scratchbox: Executed Command Successfully")
+				logging.info("Highlighting Button Pressed, XPATH, Successful")
 			except:
-				logging.info("Scratchbox: Failed Executing Command")
+				logging.error("Highlight Button Pressed But Failed Executing Command, XPATH")
 				sg.PopupError("There was an issue Highlighting, Check Element")
 
 		if values['elementtype'] == "ID":
+			logging.info("Highlighting Button Pressed, ID")
 			try:
 				scriptvar = str.strip(values['enterElement'])
 				exec("lite = app.engine.find_element_by_id(\"{}\")\napp.Highlight(lite)".format(scriptvar))
-				logging.info("Scratchbox: Executed Command Successfully")
+				logging.info("Highlighting Button Pressed, ID, Successful")
 			except:
-				logging.info("Scratchbox: Failed Executing Command")
+				logging.error("Highlight Button Pressed But Failed Executing Command, ID")
 				sg.PopupError("There was an issue Highlighting, Check Element")
 
 
 
 	if b is None:
-		#shelf.close()
 		break
