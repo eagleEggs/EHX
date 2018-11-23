@@ -19,5 +19,5 @@ Great code from https://gist.github.com/dariodiaz/3104601 and https://gist.githu
 
 ### License
 
-EHX is GPL v3
+EHX is GPL v3<br>
 Octicons (Rocket Ship and Pen icons) are MIT licensed: https://github.com/primer/octicons/blob/master/LICENSE
