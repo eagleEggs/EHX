@@ -22,7 +22,7 @@ import PySimpleGUI as sg # tkinter alt
 import logging # logging system
 
 
-logging.basicConfig(filename='Topanga_EHX.log', level=logging.INFO)
+logging.basicConfig(filename='EHX.log', level=logging.INFO)
 logging.info("Launched EHX")
 
 
@@ -103,23 +103,23 @@ ddCols = ["Red", "Green", "Orchid", "Aqua", "Aquamarine ", "Orange", "Tomato", "
 
 
 col11 = [[
-		 sg.Image(filename="bconfig.png", )],
+		 sg.Image(filename="images/bconfig.png")],
          [sg.InputText('https://www.github.com/eagleEggs/EHX', key='appuri', do_not_clear=True, size = (37, 10))],
 		 #sg.ReadButton('', key = "saveurl", border_width=0, size = (1, 1), image_filename="save.png", tooltip = "Save URL")],
 		 #[sg.InputCombo(urlhist, key = "urlshelf", size = (35, 10))], # shelf drop down - URL's
          [sg.InputCombo(ddVals, key = "browsertype", size = (35, 10))],
-		 [sg.ReadButton("", border_width=0, tooltip='Start Testing Environment', key = "Launch", size = (33, 2), image_filename="HLlaunch.png")],
-		 [sg.Image(filename="econfig.png", )],
+		 [sg.ReadButton("", border_width=0, tooltip='Start Testing Environment', key = "Launch", size = (33, 2), image_filename="images/HLlaunch.png")],
+		 [sg.Image(filename="images/econfig.png")],
 		 [sg.Multiline(".text-gray-dark", size=(35,2), enter_submits=True, key='enterElement', do_not_clear=True)],
 		 #sg.ReadButton('', key = "saveelement", border_width=0, size = (1, 1), image_filename="save.png", tooltip = "Save Element")],
 		 #[sg.InputCombo(elementhist, key = "elementshelf", size = (35, 10))], # shelf drop down - Elements
 
 		 [sg.InputCombo(ddElements, key = "elementtype", size=(35,10))],
 		 [sg.InputCombo(ddCols, key="colortype", size=(35, 10))],
-		 [sg.ReadButton('', key = "highlight", border_width=0, size = (33, 5), image_filename="HLimg.png", tooltip = "Highlight Element")],
+		 [sg.ReadButton('', key = "highlight", border_width=0, size = (33, 5), image_filename="images/HLimg.png", tooltip = "Highlight Element")],
 		 [sg.T("")],
-		 [sg.Image(filename = "HLlogo.png", )],
-		 [sg.Image(filename="license.png", )]]
+		 [sg.Image(filename = "images/HLlogo.png")],
+		 [sg.Image(filename="images/license.png")]]
 
 
 #############################################
