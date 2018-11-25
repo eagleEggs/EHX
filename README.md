@@ -1,5 +1,6 @@
 # EHX
-Element Hunter X
+
+![anim1](https://img.shields.io/badge/built%20with-python%203.7-brightgreen.svg) ![anim1](https://img.shields.io/badge/status-Stable-pink.svg) ![anim1](https://img.shields.io/badge/version-1.0-black.svg)
 
 ### What is it?
 
