@@ -18,6 +18,7 @@
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import InvalidArgumentException
+from selenium.common.exceptions import WebDriverException
 import PySimpleGUI as Sg
 import logging
 
@@ -44,13 +45,16 @@ class Engine(object):
         self.browsername = browsername
         self.siteaddress = siteaddress
         self.elementstore = ""
-
-        if values['BROWSERTYPE'] == "Internet Explorer":
-            self.engine = webdriver.Ie()
-        elif values['BROWSERTYPE'] == "Firefox":
-            self.engine = webdriver.Firefox()
-        elif values['BROWSERTYPE'] == "Chrome":
-            self.engine = webdriver.Chrome()
+        try:
+            if values['BROWSERTYPE'] == "Internet Explorer":
+                self.engine = webdriver.Ie()
+            elif values['BROWSERTYPE'] == "Firefox":
+                self.engine = webdriver.Firefox()
+            elif values['BROWSERTYPE'] == "Chrome":
+                self.engine = webdriver.Chrome()
+        except WebDriverException as error:
+            logging.warning("Issue Instantiating Browser: {}".format(error))
+            Sg.PopupError("Error: {}".format(error))
 
     def highlight(self, element):
         try:
@@ -100,10 +104,9 @@ class BrowserController(Engine):
     def open_site(self):
         try:
             self.engine.get(self.siteaddress)
-        except InvalidArgumentException:
-            logging.warning("Issue Instantiating Browser, Check URL")
-            Sg.PopupError("Issue Instantiating Browser, Check URL and Inputs")
-            self.engine.close()
+        except (AttributeError, WebDriverException) as error:
+            logging.error("Issue Opening Site: {}".format(error))
+
 
 
 
@@ -145,13 +148,7 @@ while True:
     b, values = window.Read()
 
     if b == "LAUNCH":
-        try:
-            APP = BrowserController(values["BROWSERTYPE"], values["APP_URL"])
-        except (NameError, KeyError):
-            APP = ""
-            logging.warning("Issue Instantiating Browser, Check URL and Inputs")
-            Sg.PopupError("Issue Instantiating Browser, Check URL and Inputs")
-            break
+        APP = BrowserController(values["BROWSERTYPE"], values["APP_URL"])
         APP.open_site()
         logging.info("Instantiating Application")
 
