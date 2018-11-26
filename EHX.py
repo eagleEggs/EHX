@@ -108,8 +108,6 @@ class BrowserController(Engine):
             logging.error("Issue Opening Site: {}".format(error))
 
 
-
-
 # ######################################################################### ###
 # ###########         GUI: Layouts and Declarations             ########### ###
 # ######################################################################### ###
