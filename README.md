@@ -6,7 +6,7 @@
 
 Element Hunter X (EHX) is an application which allows you to maintain a single browser session while testing elements for web automation testing. It's main purpose is to save time from recompiling and/or relaunching test from your code and waiting over and over for the browser to open and close. <br><br>
 
-![anim1](https://github.com/eagleEggs/testStream/blob/master/EHXimg.png?)<br>
+![anim1](https://github.com/eagleEggs/testStream/blob/master/EHX_MD_Image.png?)<br>
 
 ### Releases
 
@@ -32,7 +32,7 @@ Within Element Configuration there are four actionable interactions:
    <b>1. Element String:</b> Text input box where you can paste or type your element tag string (i.e. CSS, XPATH, or ID).<br>
    <b>2. Element Type:</b> A drop down where you will choose the type of element that you have pasted or typed above.<br>
   <b>3. Color:</b> A color drop down where you can choose a color of which will be highlighted within the browser.<br>
-  <b>4. Highlight Button:</b> Once the previous inputs have been completed, click the rocket ship to launch the browser to the URL chosen.
+  <b>4. Highlight Button:</b> Once the previous inputs have been completed, click the highlight button to render highlight within the browser.
 
 Note:
 
