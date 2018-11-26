@@ -16,6 +16,8 @@
 # ######################################################################### ###
 
 from selenium import webdriver
+from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import InvalidArgumentException
 import PySimpleGUI as Sg
 import logging
 
@@ -96,7 +98,14 @@ class BrowserController(Engine):
         super(BrowserController, self).__init__(*args)
 
     def open_site(self):
-        self.engine.get(self.siteaddress)
+        try:
+            self.engine.get(self.siteaddress)
+        except InvalidArgumentException:
+            logging.warning("Issue Instantiating Browser, Check URL")
+            Sg.PopupError("Issue Instantiating Browser, Check URL and Inputs")
+            self.engine.close()
+
+
 
 # ######################################################################### ###
 # ###########         GUI: Layouts and Declarations             ########### ###
@@ -137,11 +146,14 @@ while True:
 
     if b == "LAUNCH":
         try:
-            app = BrowserController(values["BROWSERTYPE"], values["APP_URL"])
-            app.open_site()
-            logging.info("Instantiating Application")
-        except:
-            logging.warning("Issue Instantiating Application")
+            APP = BrowserController(values["BROWSERTYPE"], values["APP_URL"])
+        except (NameError, KeyError):
+            APP = ""
+            logging.warning("Issue Instantiating Browser, Check URL and Inputs")
+            Sg.PopupError("Issue Instantiating Browser, Check URL and Inputs")
+            break
+        APP.open_site()
+        logging.info("Instantiating Application")
 
     if b == "HIGHLIGHT":
         logging.info("Highlighting Button Pressed")
@@ -150,10 +162,10 @@ while True:
             logging.info("Highlighting Button Pressed, CSS")
             try:
                 SCRIPTVAR = str.strip(values['ENTER_ELEMENT'])
-                exec("LIGHT = app.engine.find_element_by_css_selector(\"{}\")\n"
-                     "app.highlight(LIGHT)".format(SCRIPTVAR))
+                exec("LIGHT = APP.engine.find_element_by_css_selector(\"{}\")\n"
+                     "APP.highlight(LIGHT)".format(SCRIPTVAR))
                 logging.info("Highlighting Button Pressed, CSS, Successful")
-            except:
+            except NoSuchElementException:
                 logging.error("Highlight Button Pressed But Failed Executing "
                               "Command, CSS")
                 Sg.PopupError("There was an issue Highlighting, Check Element")
@@ -162,10 +174,10 @@ while True:
             logging.info("Highlighting Button Pressed, XPATH")
             try:
                 SCRIPTVAR = str.strip(values['ENTER_ELEMENT'])
-                exec("LIGHT = app.engine.find_element_by_xpath(\"{}\")\n"
-                     "app.highlight(LIGHT)".format(SCRIPTVAR))
+                exec("LIGHT = APP.engine.find_element_by_xpath(\"{}\")\n"
+                     "APP.highlight(LIGHT)".format(SCRIPTVAR))
                 logging.info("Highlighting Button Pressed, XPATH, Successful")
-            except:
+            except NoSuchElementException:
                 logging.error("Highlight Button Pressed But Failed Executing "
                               "Command, XPATH")
                 Sg.PopupError("There was an issue Highlighting, Check Element")
@@ -174,10 +186,10 @@ while True:
             logging.info("Highlighting Button Pressed, ID")
             try:
                 SCRIPTVAR = str.strip(values['ENTER_ELEMENT'])
-                exec("LIGHT = app.engine.find_element_by_id(\"{}\")\n"
-                     "app.highlight(LIGHT)".format(SCRIPTVAR))
+                exec("LIGHT = APP.engine.find_element_by_id(\"{}\")\n"
+                     "APP.highlight(LIGHT)".format(SCRIPTVAR))
                 logging.info("Highlighting Button Pressed, ID, Successful")
-            except:
+            except NoSuchElementException:
                 logging.error("Highlight Button Pressed But Failed Executing "
                               "Command, ID")
                 Sg.PopupError("There was an issue Highlighting, Check Element")
