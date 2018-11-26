@@ -57,7 +57,7 @@ class Engine(object):
             if self.elementstore is not "":
                 logging.error("Removing Previous Element from Store")
                 self.highlight_remove(self.elementstore)
-        except:
+        except NoSuchElementException:
             logging.error("Issue with Element Store")
         try:
             self.elementstore = element
@@ -66,7 +66,7 @@ class Engine(object):
                          "background: {}; ""border: 3px solid {};"
                          "".format(
                                  values["COLOR_TYPE"], values["COLOR_TYPE"]))
-        except:
+        except NoSuchElementException:
             logging.error("Could not Highlight Element")
             Sg.PopupError("There was an issue Highlighting, Check Element")
 
@@ -74,14 +74,14 @@ class Engine(object):
         try:
             self.engine.execute_script("arguments[0].setAttribute('style',"
                                        " arguments[1]);", element, style)
-        except:
+        except NoSuchElementException:
             logging.error("Could not Stylize Element")
 
     def highlight_remove(self, element):
         try:
             parent = element._parent
             self.stylize_remove(parent, element, " ;")
-        except:
+        except NoSuchElementException:
             logging.error("Could not Remove Element Highlight")
 
     def stylize_remove(self, parent, element, style):
