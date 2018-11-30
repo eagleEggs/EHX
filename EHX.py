@@ -17,8 +17,9 @@
 
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
-from selenium.common.exceptions import InvalidArgumentException
+from selenium.common.exceptions import NoSuchWindowException
 from selenium.common.exceptions import WebDriverException
+from selenium.common.exceptions import StaleElementReferenceException
 import PySimpleGUI as Sg
 import logging
 
@@ -27,13 +28,18 @@ import logging
 # ######################################################################### ###
 
 logging.basicConfig(filename='EHX.log', level=logging.INFO)
-logging.info("LAUNCHed EHX v1.0")
+logging.info("Launched EHX v1.0")
 
 LIGHT = ""
 DD_BROWSERS = ["Internet Explorer", "Firefox", "Chrome"]
-DD_ELEMENTS = ["CSS Selector", "XPATH", "ID"]
-DD_COLORS = ["Red", "Green", "Orchid", "Aqua", "Aquamarine ", "Orange", "Tomato",
-                    "Salmon", "Yellow", "Blue", "Plum", "PeachPuff"]
+DD_ELEMENTS_DICT = {"CSS Selector": "find_element_by_css_selector",
+                    "XPATH": "find_elements_by_xpath",
+                    "ID": "find_elements_by_id",
+                    "Class Name": "find_elements_by_class_name",
+                    "Name": "find_elements_by_name"}
+DD_ELEMENTS = ["CSS Selector", "XPATH", "ID", "Class Name", "Name"]
+DD_COLORS = ["Red", "Green", "Orchid", "Aqua", "Aquamarine ", "Orange",
+             "Tomato", "Salmon", "Yellow", "Blue", "Plum", "PeachPuff"]
 
 # ######################################################################### ###
 # ###########          Engine: Master Controller Class          ########### ###
@@ -44,48 +50,75 @@ class Engine(object):
     def __init__(self, browsername, siteaddress):
         self.browsername = browsername
         self.siteaddress = siteaddress
-        self.elementstore = ""
-        try:
-            if values['BROWSERTYPE'] == "Internet Explorer":
-                self.engine = webdriver.Ie()
-            elif values['BROWSERTYPE'] == "Firefox":
-                self.engine = webdriver.Firefox()
-            elif values['BROWSERTYPE'] == "Chrome":
-                self.engine = webdriver.Chrome()
-        except WebDriverException as error:
-            logging.warning("Issue Instantiating Browser: {}".format(error))
-            Sg.PopupError("Error: {}".format(error))
+        self.elementlist = []
+        self.elementstore = []
 
     def highlight(self, element):
+
         try:
-            if self.elementstore is not "":
-                logging.error("Removing Previous Element from Store")
-                self.highlight_remove(self.elementstore)
-        except NoSuchElementException:
-            logging.error("Issue with Element Store")
+            for elements in element:
+                self.elementlist.append(elements)
+        except TypeError:
+            self.elementlist.append(element)
+
+        if len(self.elementstore) == 1:
+            logging.info("Single Element Store Needs to be Emptied")
+            try:
+                logging.info("Removing Previous Element from Single Store")
+                self.highlight_remove(element)
+                logging.info("Single Removed:".format(element))
+            except (NoSuchElementException,
+                    TypeError,
+                    StaleElementReferenceException) as elem_remove_error:
+                logging.error(elem_remove_error)
+            self.elementstore.clear()
+            logging.info("Emptied Single Element from Store")
+
+        if len(self.elementstore) > 1:
+            logging.info("Multiple Element Store Needs to be Emptied")
+            for item in self.elementstore:
+                logging.info("Iterating through elements".format(item))
+                try:
+                    logging.info("Removing Previous Element from Store")
+                    self.highlight_remove(item)
+                    logging.info("Multiple Removed:".format(item))
+                except (NoSuchElementException,
+                        TypeError,
+                        StaleElementReferenceException) as elem_remove_error:
+                        logging.error(elem_remove_error)
+            self.elementstore.clear()
+            logging.info("Emptied Multiple Elements from Store")
+
         try:
-            self.elementstore = element
-            parent = element._parent
-            self.stylize(parent, element,
-                         "background: {}; ""border: 3px solid {};"
-                         "".format(
-                                 values["COLOR_TYPE"], values["COLOR_TYPE"]))
-        except NoSuchElementException:
-            logging.error("Could not Highlight Element")
-            Sg.PopupError("There was an issue Highlighting, Check Element")
+            for item in self.elementlist:
+                parent = item._parent
+                self.stylize(parent, item,
+                             "background: {}; ""border: 3px solid {};"
+                             "".format(
+                                    values["COLOR_TYPE"],
+                                    values["COLOR_TYPE"]))
+                self.elementstore.append(item)
+            self.elementlist.clear()
+
+        except (NoSuchElementException, AttributeError):
+            logging.info("Element Issue")
+            Sg.PopupError("Error with Element(s)\n[Not Found, or Other Error]")
 
     def stylize(self, parent, element, style):
-        try:
-            self.engine.execute_script("arguments[0].setAttribute('style',"
-                                       " arguments[1]);", element, style)
-        except NoSuchElementException:
-            logging.error("Could not Stylize Element")
+            try:
+                self.engine.execute_script("arguments[0].setAttribute('style',"
+                                           " arguments[1]);", element, style)
+            except (NoSuchElementException, TypeError,
+                    StaleElementReferenceException) as style_error:
+                logging.error(style_error)
+                Sg.PopupError(style_error)
 
     def highlight_remove(self, element):
         try:
             parent = element._parent
             self.stylize_remove(parent, element, " ;")
-        except NoSuchElementException:
+            logging.info("Element Removed")
+        except (NoSuchElementException, TypeError):
             logging.error("Could not Remove Element Highlight")
 
     def stylize_remove(self, parent, element, style):
@@ -101,17 +134,29 @@ class BrowserController(Engine):
     def __init__(self, *args):
         super(BrowserController, self).__init__(*args)
 
-    def open_site(self):
         try:
+            if values['BROWSERTYPE'] == "Internet Explorer":
+                self.engine = webdriver.Ie()
+                self.open_site()
+            elif values['BROWSERTYPE'] == "Firefox":
+                self.engine = webdriver.Firefox()
+                self.open_site()
+            elif values['BROWSERTYPE'] == "Chrome":
+                self.engine = webdriver.Chrome()
+                self.open_site()
+        except (AttributeError, WebDriverException,
+                NoSuchWindowException, TypeError) as browser_error:
+            logging.warning(
+                    "Issue Instantiating Browser: {}".format(browser_error))
+            Sg.PopupError(browser_error)
+
+    def open_site(self):
             self.engine.get(self.siteaddress)
-        except (AttributeError, WebDriverException) as error:
-            logging.error("Issue Opening Site: {}".format(error))
 
 
 # ######################################################################### ###
 # ###########         GUI: Layouts and Declarations             ########### ###
 # ######################################################################### ###
-
 
 EHX_COLUMN = [[
          Sg.Image(filename="images/bconfig.png")],
@@ -147,47 +192,24 @@ while True:
 
     if b == "LAUNCH":
         APP = BrowserController(values["BROWSERTYPE"], values["APP_URL"])
-        APP.open_site()
         logging.info("Instantiating Application")
 
     if b == "HIGHLIGHT":
         logging.info("Highlighting Button Pressed")
 
-        if values['ELEMENT_TYPE'] == "CSS Selector":
-            logging.info("Highlighting Button Pressed, CSS")
-            try:
-                SCRIPTVAR = str.strip(values['ENTER_ELEMENT'])
-                exec("LIGHT = APP.engine.find_element_by_css_selector(\"{}\")\n"
-                     "APP.highlight(LIGHT)".format(SCRIPTVAR))
-                logging.info("Highlighting Button Pressed, CSS, Successful")
-            except NoSuchElementException:
-                logging.error("Highlight Button Pressed But Failed Executing "
-                              "Command, CSS")
-                Sg.PopupError("There was an issue Highlighting, Check Element")
-
-        if values['ELEMENT_TYPE'] == "XPATH":
-            logging.info("Highlighting Button Pressed, XPATH")
-            try:
-                SCRIPTVAR = str.strip(values['ENTER_ELEMENT'])
-                exec("LIGHT = APP.engine.find_element_by_xpath(\"{}\")\n"
-                     "APP.highlight(LIGHT)".format(SCRIPTVAR))
-                logging.info("Highlighting Button Pressed, XPATH, Successful")
-            except NoSuchElementException:
-                logging.error("Highlight Button Pressed But Failed Executing "
-                              "Command, XPATH")
-                Sg.PopupError("There was an issue Highlighting, Check Element")
-
-        if values['ELEMENT_TYPE'] == "ID":
-            logging.info("Highlighting Button Pressed, ID")
-            try:
-                SCRIPTVAR = str.strip(values['ENTER_ELEMENT'])
-                exec("LIGHT = APP.engine.find_element_by_id(\"{}\")\n"
-                     "APP.highlight(LIGHT)".format(SCRIPTVAR))
-                logging.info("Highlighting Button Pressed, ID, Successful")
-            except NoSuchElementException:
-                logging.error("Highlight Button Pressed But Failed Executing "
-                              "Command, ID")
-                Sg.PopupError("There was an issue Highlighting, Check Element")
+        try:
+            SCRIPTVAR = str.strip(values['ENTER_ELEMENT'])
+            exec("LIGHT=APP.engine.{}(\"{}\")\n"
+                 "APP.highlight(LIGHT)".format(
+                    str.strip(DD_ELEMENTS_DICT[values['ELEMENT_TYPE']]),
+                    SCRIPTVAR))
+            logging.info("Highlighting Button Pressed, {}, Successful".format(
+                    values['ELEMENT_TYPE']))
+        except (NoSuchElementException, KeyError, AttributeError) as error:
+            logging.error("Highlight Button Pressed But Failed Executing "
+                          "Command, {}".format(values['ELEMENT_TYPE']))
+            logging.error(error)
+            Sg.PopupError("There was an issue Highlighting, Check Element")
 
     if b is None:
         break
