@@ -1,184 +1,215 @@
-# ______________________________#
-################################
-############  EHX  #############
-########################v1.0####
+# ######################################################################### ###
+# ########################## Element Hunter X v1.0 ######################## ###
+# ######################################################################### ###
 
-# Element Hunter X
+# License: GPL v3
 # Copyright github.com/eagleEggs
 # Contact: https://github.com/eagleEggs/EHX/issues
 # EHX is a submodule of Test Anatomy: https://github.com/eagleEggs/Test-Anatomy
 
-################################
-################################
+# References for Style Override Function:
+# https://gist.github.com/dariodiaz/3104601
+# https://gist.github.com/marciomazza/3086536
 
+# ######################################################################### ###
+# ############################### Imports ################################# ###
+# ######################################################################### ###
 
-# Selenium:
-from selenium import webdriver # selenium web driver
+from selenium import webdriver
+from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import NoSuchWindowException
+from selenium.common.exceptions import WebDriverException
+from selenium.common.exceptions import StaleElementReferenceException
+import PySimpleGUI as Sg
+import logging
 
-# GUI:
-import PySimpleGUI as sg # tkinter alt
-
-# System:
-import logging # logging system
-
+# ######################################################################### ###
+# ########################## Globals and Setup ############################ ###
+# ######################################################################### ###
 
 logging.basicConfig(filename='EHX.log', level=logging.INFO)
-logging.info("Launched EHX")
+logging.info("Launched EHX v1.0")
 
+LIGHT = ""
+DD_BROWSERS = ["Internet Explorer", "Firefox", "Chrome"]
+DD_ELEMENTS_DICT = {"CSS Selector": "find_element_by_css_selector",
+                    "XPATH": "find_elements_by_xpath",
+                    "ID": "find_elements_by_id",
+                    "Class Name": "find_elements_by_class_name",
+                    "Name": "find_elements_by_name"}
+DD_ELEMENTS = ["CSS Selector", "XPATH", "ID", "Class Name", "Name"]
+DD_COLORS = ["Red", "Green", "Orchid", "Aqua", "Aquamarine ", "Orange",
+             "Tomato", "Salmon", "Yellow", "Blue", "Plum", "PeachPuff"]
 
-#######################################
-### Engine: Master Controller Class ###
-#######################################
+# ######################################################################### ###
+# ###########          Engine: Master Controller Class          ########### ###
+# ######################################################################### ###
+
 
 class Engine(object):
-	def __init__(self, browserName, siteAddress):
-		self.browserName = browserName
-		self.siteAddress = siteAddress
-		self.elementStore = "" # used for tracking and removing elements for HL
+    def __init__(self, browsername, siteaddress):
+        self.browsername = browsername
+        self.siteaddress = siteaddress
+        self.elementlist = []
+        self.elementstore = []
 
-		if values['browsertype'] == "Internet Explorer":
-			self.engine = webdriver.Ie()
-		elif values['browsertype'] == "Firefox":
-			self.engine = webdriver.Firefox()
-		elif values['browsertype'] == "Chrome":
-			self.engine = webdriver.Chrome()
+    def highlight(self, element):
 
+        try:
+            for elements in element:
+                self.elementlist.append(elements)
+        except TypeError:
+            self.elementlist.append(element)
 
-	def Highlight(self, element):
-		try:
-			if self.elementStore is not "":
-				logging.error("Highlight: Removing Previous Element from Store")
-				self.HighlightRemove(self.elementStore)
-		except:
-			logging.error("Highlight: Issue with Element Store")
-		try:
-			self.elementStore = element
-			parent = element._parent
-			self.Stylize(parent, element,"background: {}; border: 3px solid {};".format(values["colortype"], values["colortype"]))
-		except:
-			logging.error("Could not Highlight Element")
-			sg.PopupError("Highlight: There was an issue Highlighting, Check Element")
+        if len(self.elementstore) == 1:
+            logging.info("Single Element Store Needs to be Emptied")
+            try:
+                logging.info("Removing Previous Element from Single Store")
+                self.highlight_remove(element)
+                logging.info("Single Removed:".format(element))
+            except (NoSuchElementException,
+                    TypeError,
+                    StaleElementReferenceException) as elem_remove_error:
+                logging.error(elem_remove_error)
+            self.elementstore.clear()
+            logging.info("Emptied Single Element from Store")
 
-	def Stylize(self, parent, element, style):
-		try:
-			self.engine.execute_script("arguments[0].setAttribute('style', arguments[1]);", element, style)  # reference: https://gist.github.com/dariodiaz/3104601
-		except:
-			logging.error("Could not Stylize Element")
+        if len(self.elementstore) > 1:
+            logging.info("Multiple Element Store Needs to be Emptied")
+            for item in self.elementstore:
+                logging.info("Iterating through elements".format(item))
+                try:
+                    logging.info("Removing Previous Element from Store")
+                    self.highlight_remove(item)
+                    logging.info("Multiple Removed:".format(item))
+                except (NoSuchElementException,
+                        TypeError,
+                        StaleElementReferenceException) as elem_remove_error:
+                        logging.error(elem_remove_error)
+            self.elementstore.clear()
+            logging.info("Emptied Multiple Elements from Store")
 
-	def HighlightRemove(self, element):
-		try:
-			parent = element._parent
-			self.StylizeRemove(parent, element, " ;") # blanking out html style
-		except:
-			logging.error("Could not Remove Element Highlight")
+        try:
+            for item in self.elementlist:
+                parent = item._parent
+                self.stylize(parent, item,
+                             "background: {}; ""border: 3px solid {};"
+                             "".format(
+                                    values["COLOR_TYPE"],
+                                    values["COLOR_TYPE"]))
+                self.elementstore.append(item)
+            self.elementlist.clear()
 
-	def StylizeRemove(self, parent, element, style):
-		self.engine.execute_script("arguments[0].setAttribute('style', arguments[1])", element, style)
+        except (NoSuchElementException, AttributeError):
+            logging.info("Element Issue")
+            Sg.PopupError("Error with Element(s)\n[Not Found, or Other Error]")
 
-################################
-### Browser Controller Class ###
-################################
+    def stylize(self, parent, element, style):
+            try:
+                self.engine.execute_script("arguments[0].setAttribute('style',"
+                                           " arguments[1]);", element, style)
+            except (NoSuchElementException, TypeError,
+                    StaleElementReferenceException) as style_error:
+                logging.error(style_error)
+                Sg.PopupError(style_error)
+
+    def highlight_remove(self, element):
+        try:
+            parent = element._parent
+            self.stylize_remove(parent, element, " ;")
+            logging.info("Element Removed")
+        except (NoSuchElementException, TypeError):
+            logging.error("Could not Remove Element Highlight")
+
+    def stylize_remove(self, parent, element, style):
+        self.engine.execute_script("arguments[0].setAttribute('style',"
+                                   " arguments[1])", element, style)
+
+# ######################################################################### ###
+# ###########            Browser Controller Class               ########### ###
+# ######################################################################### ###
+
 
 class BrowserController(Engine):
-	def __init__(self, *args):
-		super(BrowserController, self).__init__(*args)
+    def __init__(self, *args):
+        super(BrowserController, self).__init__(*args)
 
-	def openSite(self):
-		self.engine.get(self.siteAddress)
+        try:
+            if values['BROWSERTYPE'] == "Internet Explorer":
+                self.engine = webdriver.Ie()
+                self.open_site()
+            elif values['BROWSERTYPE'] == "Firefox":
+                self.engine = webdriver.Firefox()
+                self.open_site()
+            elif values['BROWSERTYPE'] == "Chrome":
+                self.engine = webdriver.Chrome()
+                self.open_site()
+        except (AttributeError, WebDriverException,
+                NoSuchWindowException, TypeError) as browser_error:
+            logging.warning(
+                    "Issue Instantiating Browser: {}".format(browser_error))
+            Sg.PopupError(browser_error)
 
-
-################################
-###      Shelve Storage      ###
-################################
-
-
-
-################################
-###     Scratchpad Page      ###
-################################
-
-ddVals = ["Internet Explorer","Firefox", "Chrome"]
-ddElements = ["CSS Selector", "XPATH", "ID"]
-ddCols = ["Red", "Green", "Orchid", "Aqua", "Aquamarine ", "Orange", "Tomato", "Salmon", "Yellow", "Blue", "Plum", "PeachPuff"]
-
-
-col11 = [[
-		 sg.Image(filename="images/bconfig.png")],
-         [sg.InputText('https://www.github.com/eagleEggs/EHX', key='appuri', do_not_clear=True, size = (37, 10))],
-		 #sg.ReadButton('', key = "saveurl", border_width=0, size = (1, 1), image_filename="save.png", tooltip = "Save URL")],
-		 #[sg.InputCombo(urlhist, key = "urlshelf", size = (35, 10))], # shelf drop down - URL's
-         [sg.InputCombo(ddVals, key = "browsertype", size = (35, 10))],
-		 [sg.ReadButton("", border_width=0, tooltip='Start Testing Environment', key = "Launch", size = (33, 2), image_filename="images/HLlaunch.png")],
-		 [sg.Image(filename="images/econfig.png")],
-		 [sg.Multiline(".text-gray-dark", size=(35,2), enter_submits=True, key='enterElement', do_not_clear=True)],
-		 #sg.ReadButton('', key = "saveelement", border_width=0, size = (1, 1), image_filename="save.png", tooltip = "Save Element")],
-		 #[sg.InputCombo(elementhist, key = "elementshelf", size = (35, 10))], # shelf drop down - Elements
-
-		 [sg.InputCombo(ddElements, key = "elementtype", size=(35,10))],
-		 [sg.InputCombo(ddCols, key="colortype", size=(35, 10))],
-		 [sg.ReadButton('', key = "highlight", border_width=0, size = (33, 5), image_filename="images/HLimg.png", tooltip = "Highlight Element")],
-		 [sg.T("")],
-		 [sg.Image(filename = "images/HLlogo.png")],
-		 [sg.Image(filename="images/license.png")]]
+    def open_site(self):
+            self.engine.get(self.siteaddress)
 
 
-#############################################
-###    testStream Layout and Rendering    ###
-#############################################
+# ######################################################################### ###
+# ###########         GUI: Layouts and Declarations             ########### ###
+# ######################################################################### ###
 
-tab11 = [[sg.Column(col11, pad=(0, 0))]]
-layout = [[sg.Column(col11, size = (0, 0))]]
-window = sg.Window("EHX (v1.3)", no_titlebar=False, auto_size_text=True).Layout(layout).Finalize()
-lite = "" # shell to wait for app to create var for engine
+EHX_COLUMN = [[
+         Sg.Image(filename="images/bconfig.png")],
+         [Sg.InputText('https://www.github.com/eagleEggs/EHX', key='APP_URL',
+                       do_not_clear=True, size=(37, 10))],
+         [Sg.InputCombo(DD_BROWSERS, key="BROWSERTYPE", size=(35, 10))],
+         [Sg.ReadButton("", border_width=0,
+                        tooltip='Start Testing Environment', key="LAUNCH",
+                        size=(33, 2), image_filename="images/HLlaunch.png")],
+         [Sg.Image(filename="images/econfig.png")],
+         [Sg.Multiline(".text-gray-dark", size=(36, 2), enter_submits=True,
+                       key='ENTER_ELEMENT', do_not_clear=True)],
+         [Sg.InputCombo(DD_ELEMENTS, key="ELEMENT_TYPE", size=(35, 10))],
+         [Sg.InputCombo(DD_COLORS, key="COLOR_TYPE", size=(35, 10))],
+         [Sg.ReadButton('', key="HIGHLIGHT", border_width=0, size=(33, 5),
+                        image_filename="images/HLimg.png",
+                        tooltip="Highlight Element")],
+         [Sg.T("")],
+         [Sg.Image(filename="images/HLlogo.png")],
+         [Sg.Image(filename="images/license.png")]]
 
+layout = [[Sg.Column(EHX_COLUMN, size=(0, 0))]]
+window = Sg.Window("EHX v1.0", no_titlebar=False,
+                   auto_size_text=True).Layout(layout).Finalize()
+
+# ######################################################################### ###
+# ###########               GUI: Main Loop                      ########### ###
+# ######################################################################### ###
 
 while True:
 
-	b, values = window.Read()  # read input values from GUI
+    b, values = window.Read()
 
-	if b == "Launch":
-		try:
-			app = BrowserController(values["browsertype"], values["appuri"])
-			app.openSite()
-			logging.info("Instantiating Application")
-		except:
-			logging.warning("Issue Instantiating Application")
+    if b == "LAUNCH":
+        APP = BrowserController(values["BROWSERTYPE"], values["APP_URL"])
+        logging.info("Instantiating Application")
 
+    if b == "HIGHLIGHT":
+        logging.info("Highlighting Button Pressed")
 
-	if b == "highlight":  # this grabs content from sb3 and puts it in script form for highlighting through API
-		logging.info("Highlighting Button Pressed")
+        try:
+            SCRIPTVAR = str.strip(values['ENTER_ELEMENT'])
+            exec("LIGHT=APP.engine.{}(\"{}\")\n"
+                 "APP.highlight(LIGHT)".format(
+                    str.strip(DD_ELEMENTS_DICT[values['ELEMENT_TYPE']]),
+                    SCRIPTVAR))
+            logging.info("Highlighting Button Pressed, {}, Successful".format(
+                    values['ELEMENT_TYPE']))
+        except (NoSuchElementException, KeyError, AttributeError) as error:
+            logging.error("Highlight Button Pressed But Failed Executing "
+                          "Command, {}".format(values['ELEMENT_TYPE']))
+            logging.error(error)
+            Sg.PopupError("There was an issue Highlighting, Check Element")
 
-		if values['elementtype'] == "CSS Selector":
-			logging.info("Highlighting Button Pressed, CSS")
-			try:
-				scriptvar = str.strip(values['enterElement'])
-				exec("lite = app.engine.find_element_by_css_selector(\"{}\")\napp.Highlight(lite)".format(scriptvar))
-				logging.info("Highlighting Button Pressed, CSS, Successful")
-			except:
-				logging.error("Highlight Button Pressed But Failed Executing Command, CSS")
-				sg.PopupError("There was an issue Highlighting, Check Element")
-
-		if values['elementtype'] == "XPATH":
-			logging.info("Highlighting Button Pressed, XPATH")
-			try:
-				scriptvar = str.strip(values['enterElement'])
-				exec("lite = app.engine.find_element_by_xpath(\"{}\")\napp.Highlight(lite)".format(scriptvar))
-				logging.info("Highlighting Button Pressed, XPATH, Successful")
-			except:
-				logging.error("Highlight Button Pressed But Failed Executing Command, XPATH")
-				sg.PopupError("There was an issue Highlighting, Check Element")
-
-		if values['elementtype'] == "ID":
-			logging.info("Highlighting Button Pressed, ID")
-			try:
-				scriptvar = str.strip(values['enterElement'])
-				exec("lite = app.engine.find_element_by_id(\"{}\")\napp.Highlight(lite)".format(scriptvar))
-				logging.info("Highlighting Button Pressed, ID, Successful")
-			except:
-				logging.error("Highlight Button Pressed But Failed Executing Command, ID")
-				sg.PopupError("There was an issue Highlighting, Check Element")
-
-
-
-	if b is None:
-		break
+    if b is None:
+        break
