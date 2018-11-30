@@ -20,6 +20,7 @@ from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import NoSuchWindowException
 from selenium.common.exceptions import WebDriverException
 from selenium.common.exceptions import StaleElementReferenceException
+import _thread as thread
 import PySimpleGUI as Sg
 import logging
 
@@ -40,7 +41,8 @@ DD_ELEMENTS_DICT = {"CSS Selector": "find_element_by_css_selector",
 DD_ELEMENTS = ["CSS Selector", "XPATH", "ID", "Class Name", "Name"]
 DD_COLORS = ["Red", "Green", "Orchid", "Aqua", "Aquamarine ", "Orange",
              "Tomato", "Salmon", "Yellow", "Blue", "Plum", "PeachPuff"]
-
+global waitWindow_active
+waitWindow_active = False
 # ######################################################################### ###
 # ###########          Engine: Master Controller Class          ########### ###
 # ######################################################################### ###
@@ -54,7 +56,6 @@ class Engine(object):
         self.elementstore = []
 
     def highlight(self, element):
-
         try:
             for elements in element:
                 self.elementlist.append(elements)
@@ -75,20 +76,15 @@ class Engine(object):
             logging.info("Emptied Single Element from Store")
 
         if len(self.elementstore) > 1:
+            global waitWindow_active
             logging.info("Multiple Element Store Needs to be Emptied")
-            for item in self.elementstore:
-                logging.info("Iterating through elements".format(item))
-                try:
-                    logging.info("Removing Previous Element from Store")
-                    self.highlight_remove(item)
-                    logging.info("Multiple Removed:".format(item))
-                except (NoSuchElementException,
-                        TypeError,
-                        StaleElementReferenceException) as elem_remove_error:
-                        logging.error(elem_remove_error)
-            self.elementstore.clear()
-            logging.info("Emptied Multiple Elements from Store")
+            thread.start_new_thread(self.highlight_remove_multi, ())
 
+        thread.start_new_thread(self.highlight_add, ())
+
+    def highlight_add(self):
+        global waitWindow_active
+        waitWindow_active = True
         try:
             for item in self.elementlist:
                 parent = item._parent
@@ -99,26 +95,45 @@ class Engine(object):
                                     values["COLOR_TYPE"]))
                 self.elementstore.append(item)
             self.elementlist.clear()
+            waitWindow_active = False
+            waitWindow.Close()
 
-        except (NoSuchElementException, AttributeError):
+        except (NoSuchElementException, AttributeError, WebDriverException):
             logging.info("Element Issue")
             Sg.PopupError("Error with Element(s)\n[Not Found, or Other Error]")
+
+    def highlight_remove_multi(self):
+        for item in self.elementstore:
+            logging.info("Iterating through elements".format(item))
+            try:
+                logging.info("Removing Previous Element from Store")
+                self.highlight_remove(item)
+                logging.info("Multiple Removed:".format(item))
+            except (NoSuchElementException,
+                    TypeError, WebDriverException,
+                    StaleElementReferenceException) as elem_remove_error:
+                logging.error(elem_remove_error)
+        self.elementstore.clear()
+        logging.info("Emptied Multiple Elements from Store")
+        global waitWindow_active
+        waitWindow_active = False
+        waitWindow.Close()
 
     def stylize(self, parent, element, style):
             try:
                 self.engine.execute_script("arguments[0].setAttribute('style',"
                                            " arguments[1]);", element, style)
-            except (NoSuchElementException, TypeError,
+            except (NoSuchElementException, TypeError, WebDriverException,
                     StaleElementReferenceException) as style_error:
                 logging.error(style_error)
-                Sg.PopupError(style_error)
+                #Sg.PopupError(style_error)
 
     def highlight_remove(self, element):
         try:
             parent = element._parent
             self.stylize_remove(parent, element, " ;")
             logging.info("Element Removed")
-        except (NoSuchElementException, TypeError):
+        except (NoSuchElementException, TypeError, WebDriverException):
             logging.error("Could not Remove Element Highlight")
 
     def stylize_remove(self, parent, element, style):
@@ -187,29 +202,46 @@ window = Sg.Window("EHX v1.0", no_titlebar=False,
 # ######################################################################### ###
 
 while True:
+    try:
+        b, values = window.Read(timeout=100)
 
-    b, values = window.Read()
+        if b == "LAUNCH":
+            APP = BrowserController(values["BROWSERTYPE"], values["APP_URL"])
+            logging.info("Instantiating Application")
 
-    if b == "LAUNCH":
-        APP = BrowserController(values["BROWSERTYPE"], values["APP_URL"])
-        logging.info("Instantiating Application")
+        if b == "HIGHLIGHT":
 
-    if b == "HIGHLIGHT":
-        logging.info("Highlighting Button Pressed")
+            logging.info("Highlighting Button Pressed")
 
-        try:
-            SCRIPTVAR = str.strip(values['ENTER_ELEMENT'])
-            exec("LIGHT=APP.engine.{}(\"{}\")\n"
-                 "APP.highlight(LIGHT)".format(
-                    str.strip(DD_ELEMENTS_DICT[values['ELEMENT_TYPE']]),
-                    SCRIPTVAR))
-            logging.info("Highlighting Button Pressed, {}, Successful".format(
-                    values['ELEMENT_TYPE']))
-        except (NoSuchElementException, KeyError, AttributeError) as error:
-            logging.error("Highlight Button Pressed But Failed Executing "
-                          "Command, {}".format(values['ELEMENT_TYPE']))
-            logging.error(error)
-            Sg.PopupError("There was an issue Highlighting, Check Element")
+            waitWindow = Sg.Window(
+                    'EHX | Processing Element(s)...', grab_anywhere=False,
+                    no_titlebar=False).Layout(
+                    [[Sg.T("Please Wait, Processing Element(s)...")],
+                    [Sg.T("This May Take a Minute.")]])
 
-    if b is None:
-        break
+            try:
+                SCRIPTVAR = str.strip(values['ENTER_ELEMENT'])
+                exec("LIGHT=APP.engine.{}(\"{}\")\n"
+                     "APP.highlight(LIGHT)".format(
+                        str.strip(DD_ELEMENTS_DICT[values['ELEMENT_TYPE']]),
+                        SCRIPTVAR))
+                logging.info("Highlighting Button Pressed, {}, Successful".format(
+                        values['ELEMENT_TYPE']))
+
+            except (NoSuchElementException, KeyError, AttributeError) as error:
+                logging.error("Highlight Button Pressed But Failed Executing "
+                              "Command, {}".format(values['ELEMENT_TYPE']))
+                logging.error(error)
+                Sg.PopupError("There was an issue Highlighting, Check Element")
+
+        if waitWindow_active:
+            try:
+                b1, values1 = waitWindow.Read(timeout=0)
+            except RuntimeError:
+                logging.error("GUI Main Loop Runtime Error")
+
+        if b is None:
+            break
+
+    except RuntimeError:
+        Sg.PopupError("Error with GUI Loop\nWhile Processing Element(s)")
