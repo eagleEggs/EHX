@@ -10,7 +10,8 @@ Element Hunter X (EHX) is an application which allows you to maintain a single b
 
 ### Releases
 
-Version 1.0: https://github.com/eagleEggs/EHX/releases <br>
+Version 1.0: https://github.com/eagleEggs/EHX/releases (Base)<br>
+Version 1.1: https://github.com/eagleEggs/EHX/releases (Multiple elements, threading, performance)<br>
 
 ### Documentation
 
@@ -29,10 +30,16 @@ Within Browser Configuration there are three actionable interactions:
 
 Within Element Configuration there are four actionable interactions:
 
-   <b>1. Element String:</b> Text input box where you can paste or type your element tag string (i.e. CSS, XPATH, or ID).<br>
+   <b>1. Element String:</b> Text input box where you can paste or type your element tag string (i.e. CSS, XPATH, ID, etc...).<br>
    <b>2. Element Type:</b> A drop down where you will choose the type of element that you have pasted or typed above.<br>
   <b>3. Color:</b> A color drop down where you can choose a color of which will be highlighted within the browser.<br>
   <b>4. Highlight Button:</b> Once the previous inputs have been completed, click the highlight button to render highlight within the browser.
+  
+  If there are multiple elements with the same tag string you're querying, a pop up will notify you of how many it has found. You can choose to continue, or cancel the highlight before it starts.
+  
+  While highlighting, a brief pop up will flash while scanning and highlighting. A longer pop up will stay while it's highlighting, and disappear when complete.
+  
+  If you have highlighted many elements at once (Over 25), it may take a few moments for it to unhighlight when you search for the next element. Simply wait for the pop up to disappear and you're good to go.
 
 Note:
 
