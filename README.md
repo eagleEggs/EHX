@@ -1,6 +1,6 @@
 # EHX
 
-![anim1](https://img.shields.io/badge/built%20with-python%203.7-brightgreen.svg) ![anim1](https://img.shields.io/badge/status-Stable-pink.svg) ![anim1](https://img.shields.io/badge/version-1.0-black.svg)
+![anim1](https://img.shields.io/badge/built%20with-python%203.7-brightgreen.svg) ![anim1](https://img.shields.io/badge/status-Stable-pink.svg) ![anim1](https://img.shields.io/badge/version-1.1-black.svg)
 
 ### What is it?
 
@@ -10,8 +10,8 @@ Element Hunter X (EHX) is an application which allows you to maintain a single b
 
 ### Releases
 
-Version 1.0: https://github.com/eagleEggs/EHX/releases (Base)<br>
-Version 1.1: https://github.com/eagleEggs/EHX/releases (Multiple elements, threading, performance)<br>
+[Version 1.0](https://github.com/eagleEggs/EHX/releases/tag/1.0) (Base)<br>
+[Version 1.1](https://github.com/eagleEggs/EHX/releases/tag/1.1)  (Multiple elements, threading, performance)<br>
 
 ### Documentation
 
