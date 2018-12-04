@@ -2,6 +2,11 @@
 
 ![anim1](https://img.shields.io/badge/built%20with-python%203.7-brightgreen.svg) ![anim1](https://img.shields.io/badge/status-Stable-pink.svg) ![anim1](https://img.shields.io/badge/version-1.1-black.svg)
 
+### Notice
+
+Use Release 1.0 until an XPATH bug is resolved in 1.1. <br>
+Source and/or EXE are [in Releases](https://github.com/eagleEggs/EHX/releases/tag/1.0)
+
 ### What is it?
 
 Element Hunter X (EHX) is an application which allows you to maintain a single browser session while testing elements for web automation testing. It's main purpose is to save time from recompiling and/or relaunching test from your code and waiting over and over for the browser to open and close. <br><br>
